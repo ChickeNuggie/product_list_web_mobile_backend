@@ -4,6 +4,8 @@ import { ProductFilter } from '../domain/entities/product.filter.entity';
 import { catchError, Observable } from 'rxjs';
 import { Product } from '../models/product.model';
 import { ProductRepositoryImpl } from '../domain/repository/product.repository.impl';
+import { FilterParams } from '../shared/interfaces/filter-params';
+import { PaginatedResponse } from '../core/core/interfaces/paginated-response';
 
 @Injectable({
   providedIn: 'root'
@@ -14,8 +16,12 @@ export class ProductService {
 
   constructor(private repository: ProductRepositoryImpl) { }
 
-  getProducts(page: number, pageSize: number): Observable<Product[]> {
-    return this.repository.getAll(page, pageSize);
+  // getProducts(page: number, pageSize: number): Observable<Product[]> {
+  //   return this.repository.getAll(page, pageSize);
+  // }
+
+  getProducts(params: FilterParams): Observable<PaginatedResponse<Product>> {
+    return this.repository.getProducts(params);
   }
 
   getProductsById(id: number): Observable<Product> {
@@ -45,4 +51,6 @@ export class ProductService {
   updateProduct(id: number, product: Product): Observable<Product> {
     return this.repository.update(id, product);
   }
+
+
 }

@@ -1,0 +1,93 @@
+<ng-container *ngIf="!(isLoading$ | async); else loadingTemplate">
+    <div class="product-container" *ngIf="!(isLoading$ | async); else loadingTemplate">
+        <h2>{{ isEditMode ? 'Edit Product' : 'Add New Product' }}</h2>
+
+        <form [formGroup]="productForm" (ngSubmit)="onSubmit()" class="product-form">
+            <!-- Name Field -->
+            <div class="form-group">
+                <label for="name">Name:</label>
+                <input id="name" type="text" formControlName="name" class="form-control">
+                <div *ngIf="productForm.get('name')?.touched && productForm.get('name')?.errors?.['required']"
+                    class="error-message">
+                    Name is required
+                </div>
+            </div>
+
+            <!-- Type Field -->
+            <!-- <div class="form-group">
+                <label for="type">Type:</label>
+                <input id="type" type="text" formControlName="type" class="form-control">
+                <div *ngIf="productForm.get('type')?.touched && productForm.get('type')?.errors?.['required']"
+                    class="error-message">
+                    Type is required
+                </div>
+            </div> -->
+            <label for="type">Type:</label>
+            <select class="form-control" formControlName="type">
+                <option value="" disabled selected>Select Type</option>
+                <option *ngFor="let type of productListviewModel.productTypes$ | async" [value]="type">
+                    {{ type }}
+                </option>
+            </select>
+
+            <!-- Price Field -->
+            <div class="form-group">
+                <label for="price">Price:</label>
+                <input id="price" type="number" formControlName="price" class="form-control">
+                <div *ngIf="productForm.get('price')?.touched && productForm.get('price')?.errors?.['required']"
+                    class="error-message">
+                    Price is required
+                </div>
+            </div>
+
+            <!-- Description Field -->
+            <div class="form-group">
+                <label for="description">Description:</label>
+                <textarea id="description" formControlName="description" class="form-control" rows="3"></textarea>
+            </div>
+
+            <!-- Image Upload Field -->
+            <!-- <div class="form-group">
+            <label for="image">Product Image:</label>
+            <input type="file" id="image" (change)="onFileSelected($event)" accept="image/*" class="form-control"> -->
+
+            <!-- Image Preview -->
+            <!-- <div class="image-preview" *ngIf="imagePreview">
+                <img [src]="imagePreview" alt="Product preview" style="max-width: 200px; margin-top: 10px;">
+            </div>
+        </div> -->
+
+            <div class="form-group">
+                <label for="image">Product Image:</label>
+
+                <!-- Show image preview for new uploads -->
+                <div class="image-preview" *ngIf="imagePreview">
+                    <img [src]="imagePreview" alt="Preview" class="preview-image">
+
+                    <button type="button" class="remove-image" (click)="removeImage()">
+                        Remove
+                    </button>
+                </div>
+
+                <div *ngIf="!hasImage()" class="error-message">
+                    Product image is required
+                </div>
+
+                <!-- File input -->
+                <input type="file" id="image" (change)="onFileSelected($event)" accept="image/*" class="form-control">
+            </div>
+
+
+            <!-- Submit Button -->
+            <div class="form-actions">
+                <button type="submit" [disabled]="!isFormValid()" class="submit-button">
+                    {{ productId ? 'Update' : 'Create' }} Product
+                </button>
+            </div>
+        </form>
+    </div>
+</ng-container>
+
+<ng-template #loadingTemplate>
+    <div class="loading-spinner">Loading...</div>
+</ng-template>

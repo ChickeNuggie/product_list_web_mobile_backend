@@ -1,11 +1,12 @@
 //Raw data from backend
-export interface ProductEntity {
+export interface ProductEntity { // Checkpoint before ai replacement
     id?: number;
     name: string;
     type: string;
     price: number;
     description: string;
-    imageUrl: string;
-    createdAt?: Date;
-    updatedAt?: Date;
+    image_url?: string;
+    image?: File | null
+    created_at?: Date;
+    status?: string;
 }

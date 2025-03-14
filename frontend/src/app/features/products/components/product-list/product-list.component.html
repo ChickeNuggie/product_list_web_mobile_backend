@@ -1,0 +1,159 @@
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+
+<div class="container">
+    <!-- Header Section -->
+    <div class="header">
+        <h1>Product List</h1>
+        <button class="add-button" (click)="navigateToAddProduct()">
+            <i class="fas fa-plus"></i> New Product
+        </button>
+    </div>
+
+    <!-- Search Section -->
+    <!-- <div class="search-section">
+        <input type="text" [formControl]="searchControl" placeholder="Search products..." class="search-input">
+    </div> -->
+
+    <form [formGroup]="searchForm" (ngSubmit)="onSubmit()">
+        <div class="search-section">
+            <input type="text" formControlName="search" placeholder="Search products..." class="search-input">
+            <button type="submit" class="add-button">Search</button>
+        </div>
+    </form>
+
+    <div class="filter-controls">
+        <!-- Type Filter Dropdown -->
+        <select (change)="onTypeFilterChange($event)" class="filter-select">
+            <!-- <option value="">All Types</option>
+            <option value="electronics">Electronics</option>
+            <option value="clothing">Clothing</option>
+            <option value="books">Books</option> -->
+            <option value="">All Types</option>
+            <option *ngFor="let type of productListViewModel.productTypes$ | async" [value]="type">
+                {{ type }}
+            </option>
+        </select>
+
+        <!-- Price Range Filter -->
+        <div class="price-filter">
+            <input type="number" [formControl]="minPriceControl" placeholder="Min Price" class="price-input">
+            <input type="number" [formControl]="maxPriceControl" placeholder="Max Price" class="price-input">
+        </div>
+
+        <!-- Sort Options -->
+        <select (change)="onSortChange($event)" class="sort-select">
+            <option value="">Sort by...</option>
+            <option value="price_asc">Price (Low to High)</option>
+            <option value="price_desc">Price (High to Low)</option>
+            <option value="created_at_desc">Newest First</option>
+            <option value="created_at_asc">Oldest First</option>
+        </select>
+    </div>
+
+    <!-- Loading State -->
+    <div *ngIf="productListViewModel.loading$ | async" class="loading">
+        <div class="spinner"></div>
+        <p>Loading products...</p>
+    </div>
+
+    <!-- Error State -->
+    <div *ngIf="productListViewModel.error$ | async as error" class="error-message">
+        {{ error }}
+    </div>
+
+    <div class="product-list">
+        <!-- Products Grid -->
+        <div class="products-grid">
+            <div *ngFor="let product of productListViewModel.products$ | async" class="product-card">
+                <!-- Image -->
+                <div class="product-image">
+                    <!-- <img *ngIf="product.image_url" [src]="getImageUrl(product.image_url)" [alt]="product.name"
+                        (error)="handleImageError($event)">
+                    <div img='https://imgur.com/RrMBjqE' /> -->
+                    <!-- <pre>{{product | json}}</pre> -->
+                    <img [src]="product.image_url" [alt]="product.name">
+                    <!-- <div *ngIf="!product.image_url" class="no-image">
+                        No Image
+                    </div> -->
+                </div>
+
+                <div class="product-details">
+                    <h3>{{ product.name }}</h3>
+                    <p class="product-type">{{ product.type }}</p>
+                    <p class="product-price">{{ product.price | currency }}</p>
+                    <p class="product-description">{{ product.description }}</p>
+
+                    <p class="product-creation-time">
+                        <!-- Created: {{ product.created_at ? (product.created_at | date:'medium') : 'Unknown date' }} -->
+                        <span *ngIf="product.created_at"> Listed: {{ getFormattedTime(product.created_at) }}</span>
+                    </p>
+                    <p *ngIf="!product.created_at">Creation date is not available</p>
+                </div>
+
+
+
+                <div class="product-actions">
+                    <button class="edit-button" (click)="onEdit(product.id)">
+                        <i class="fas fa-edit"></i> Edit
+                    </button>
+                    <button class="delete-button" (click)="onDelete(product.id)">
+                        <i class="fas fa-trash"></i> Delete
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- No Products State -->
+        <div *ngIf="(productListViewModel.products$ | async)?.length === 0" class="no-products">
+            <p>No products found, Try another search</p>
+        </div>
+    </div>
+
+
+    <!-- Pagination Controls with null check -->
+    <!-- productListViewModel.totalItems$ is an Observable (likely from an API or service).
+    The async pipe automatically subscribes to this Observable and gets its latest value stored in a variable, to be used in the div. -->
+    <ng-container *ngIf="productListViewModel.totalItems$ | async as totalItems">
+        <ng-container *ngIf="productListViewModel.currentPage$ | async as currentPage">
+            <ng-container *ngIf="productListViewModel.totalPages$ | async as totalPages">
+                <div class="pagination-container" *ngIf="totalItems > 0">
+                    <div class="pagination-info">
+                        Showing
+                        <select [value]="currentFilters.itemSize" (change)="onPageSizeChange($event)"
+                            class="page-size-select">
+                            <option [value]="5">5</option>
+                            <option [value]="10">10</option>
+                            <option [value]="20">20</option>
+                            <option [value]="50">50</option>
+                        </select>
+                        items per page | Total: {{ totalItems }} items
+                    </div>
+
+                    <div class="pagination-controls">
+                        <button class="pagination-button" [disabled]="currentPage === 1" (click)="goToFirstPage()">
+                            <i class="fas fa-angle-double-left"></i>
+                        </button>
+
+                        <button class="pagination-button" [disabled]="currentPage === 1" (click)="goToPreviousPage()">
+                            <i class="fas fa-angle-left"></i>
+                        </button>
+
+                        <span class="pagination-text">
+                            Page {{ currentPage }} of {{ totalPages }}
+                        </span>
+
+                        <button class="pagination-button" [disabled]="currentPage === totalPages"
+                            (click)="goToNextPage()">
+                            <i class="fas fa-angle-right"></i>
+                        </button>
+
+                        <button class="pagination-button" [disabled]="currentPage === totalPages"
+                            (click)="goToLastPage()">
+                            <i class="fas fa-angle-double-right"></i>
+                        </button>
+                    </div>
+                </div>
+            </ng-container>
+        </ng-container>
+    </ng-container>
+</div>

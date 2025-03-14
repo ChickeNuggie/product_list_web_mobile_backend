@@ -7,6 +7,7 @@ import (
 	"database/sql"
 	"log"
 	"net/http"
+	"os"
 
 	"github.com/gorilla/mux"
 	_ "github.com/lib/pq"
@@ -50,17 +51,42 @@ func main() {
 	// Router setup
 	router := mux.NewRouter()
 
+	// Create an uploads directory if it doesn't exist
+	if err := os.MkdirAll("uploads", 0755); err != nil {
+		log.Fatal("Error creating uploads directory:", err)
+	}
+
 	// Routes
-	router.HandleFunc("/api/products", productController.GetProducts).Methods("GET")
+	router.HandleFunc("/api/products/search", productController.SearchProducts).Methods("GET")
+	// router.HandleFunc("/api/products", productController.GetProducts).Methods("GET")
+	router.HandleFunc("/api/products", productController.GetPagedProducts).Methods("GET")
+
+	router.HandleFunc("/api/products/{id}", productController.GetProduct).Methods("GET")
 	router.HandleFunc("/api/products", productController.CreateProduct).Methods("POST")
+	router.HandleFunc("/api/products/{id}", productController.UpdateProduct).Methods("PUT")
+	router.HandleFunc("/api/products/{id}", productController.DeleteProduct).Methods("DELETE")
+
 	// Add other routes...
 
 	// CORS
 	c := cors.New(cors.Options{
-		AllowedOrigins: []string{"*"},
-		AllowedMethods: []string{"GET", "POST", "PUT", "DELETE"},
-		AllowedHeaders: []string{"Content-Type", "Authorization"},
+		//The proxy will forward requests from 4200 to 8080 transparently
+		AllowedOrigins:   []string{"http://localhost:4200"},
+		AllowedMethods:   []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"}, // Added OPTIONS
+		AllowedHeaders:   []string{"Content-Type", "Authorization"},
+		ExposedHeaders:   []string{"Content-Length"},
+		AllowCredentials: true,
+		MaxAge:           300,
 	})
 
-	log.Fatal(http.ListenAndServe(":8080", c.Handler(router)))
+	// Create handler chain
+	handler := c.Handler(router)
+
+	// Serve static files from uploads directory
+	router.PathPrefix("/uploads/").Handler(http.StripPrefix("/uploads/", http.FileServer(http.Dir("uploads"))))
+
+	// Start server
+	log.Printf("Server starting on :8080")
+	//backend's port
+	log.Fatal(http.ListenAndServe(":8080", handler))
 }
