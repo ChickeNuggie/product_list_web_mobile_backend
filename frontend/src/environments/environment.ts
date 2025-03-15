@@ -5,7 +5,7 @@
 export const environment = {
   production: false,
   apiUrl: '/api',
-  uploadsUrl: '/upalods'
+  uploadsUrl: '/uploads'
 };
 
 /*

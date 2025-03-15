@@ -43,7 +43,7 @@ export class ProductFormComponent implements OnInit, OnDestroy {
         Validators.pattern(/^\d*\.?\d{0,2}$/) // Only allow numbers with up to 2 decimal places
       ]],
       description: [''],
-      image: [null, Validators.required],  // For file upload
+      image: [null],  // For file upload
       image_url: [null]  // For displaying existing image
     });
 
